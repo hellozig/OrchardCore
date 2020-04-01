@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
@@ -28,7 +29,6 @@ namespace OrchardCore.Users.Controllers
             IUserService userService,
             UserManager<IUser> userManager,
             ISiteService siteService,
-            ISmtpService smtpService,
             IDisplayHelper displayHelper,
             IStringLocalizer<ChangeEmailController> stringLocalizer,
             ILogger<ChangeEmailController> logger)
@@ -42,6 +42,7 @@ namespace OrchardCore.Users.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> Index()
         {
             if (!(await _siteService.GetSiteSettingsAsync()).As<ChangeEmailSettings>().AllowChangeEmail)
@@ -68,7 +69,7 @@ namespace OrchardCore.Users.Controllers
                 var user = await _userService.GetAuthenticatedUserAsync(User);
                 var userWithEmail = await _userManager.FindByEmailAsync(model.Email);
 
-                if (((User)user).Email == model.Email)
+                if (((User)user).Email.Equals(model.Email, StringComparison.OrdinalIgnoreCase))
                 {
                     ModelState.AddModelError("Email", S["This email is already your current one."]);
                 }
